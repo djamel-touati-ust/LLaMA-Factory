@@ -37,8 +37,8 @@ from ..extras.misc import use_modelscope, use_openmind
 logger = logging.get_logger(__name__)
 
 DEFAULT_CACHE_DIR = "cache"
-DEFAULT_CONFIG_DIR = "config"
-DEFAULT_DATA_DIR = "data"
+DEFAULT_CONFIG_DIR = os.getenv("LLAMAFAC_CONFIG_DIR", "/work/configs")
+DEFAULT_DATA_DIR = os.getenv("LLAMAFAC_DATA_DIR", "/work/datasets")
 DEFAULT_SAVE_DIR = "saves"
 USER_CONFIG = "user_config.yaml"
 

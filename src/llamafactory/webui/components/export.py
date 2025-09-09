@@ -12,158 +12,107 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
+import os
+import shutil
 from collections.abc import Generator
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
-from ...extras.constants import PEFT_METHODS
-from ...extras.misc import torch_gc
 from ...extras.packages import is_gradio_available
-from ...train.tuner import export_model
-from ..common import get_save_dir, load_config
+from ..common import DEFAULT_CONFIG_DIR, DEFAULT_DATA_DIR, get_time, load_dataset_info, save_args
 from ..locales import ALERTS
-
+from .data import create_preview_box
 
 if is_gradio_available():
     import gradio as gr
 
-
 if TYPE_CHECKING:
     from gradio.components import Component
-
     from ..engine import Engine
 
 
-GPTQ_BITS = ["8", "4", "3", "2"]
+def list_datasets(dataset_dir: str = None) -> "gr.Dropdown":
+    dataset_info = load_dataset_info(dataset_dir if dataset_dir is not None else DEFAULT_DATA_DIR)
+    return gr.Dropdown(choices=list(dataset_info.keys()))
 
 
-def can_quantize(checkpoint_path: Union[str, list[str]]) -> "gr.Dropdown":
-    if isinstance(checkpoint_path, list) and len(checkpoint_path) != 0:
-        return gr.Dropdown(value="none", interactive=False)
-    else:
-        return gr.Dropdown(interactive=True)
-
-
-def save_model(
+def export_config_and_dataset(
     lang: str,
     model_name: str,
     model_path: str,
     finetuning_type: str,
-    checkpoint_path: Union[str, list[str]],
-    template: str,
-    export_size: int,
-    export_quantization_bit: str,
-    export_quantization_dataset: str,
-    export_device: str,
-    export_legacy_format: bool,
-    export_dir: str,
-    export_hub_model_id: str,
-    extra_args: str,
+    dataset_dir: str,
+    dataset: list[str],
 ) -> Generator[str, None, None]:
-    user_config = load_config()
     error = ""
     if not model_name:
         error = ALERTS["err_no_model"][lang]
     elif not model_path:
         error = ALERTS["err_no_path"][lang]
-    elif not export_dir:
-        error = ALERTS["err_no_export_dir"][lang]
-    elif export_quantization_bit in GPTQ_BITS and not export_quantization_dataset:
+    elif not dataset:
         error = ALERTS["err_no_dataset"][lang]
-    elif export_quantization_bit not in GPTQ_BITS and not checkpoint_path:
-        error = ALERTS["err_no_adapter"][lang]
-    elif export_quantization_bit in GPTQ_BITS and checkpoint_path and isinstance(checkpoint_path, list):
-        error = ALERTS["err_gptq_lora"][lang]
-
-    try:
-        json.loads(extra_args)
-    except json.JSONDecodeError:
-        error = ALERTS["err_json_schema"][lang]
 
     if error:
         gr.Warning(error)
         yield error
         return
 
-    args = dict(
-        model_name_or_path=model_path,
-        cache_dir=user_config.get("cache_dir", None),
-        finetuning_type=finetuning_type,
-        template=template,
-        export_dir=export_dir,
-        export_hub_model_id=export_hub_model_id or None,
-        export_size=export_size,
-        export_quantization_bit=int(export_quantization_bit) if export_quantization_bit in GPTQ_BITS else None,
-        export_quantization_dataset=export_quantization_dataset,
-        export_device=export_device,
-        export_legacy_format=export_legacy_format,
-        trust_remote_code=True,
-    )
-    args.update(json.loads(extra_args))
+    os.makedirs(DEFAULT_CONFIG_DIR, exist_ok=True)
+    os.makedirs(DEFAULT_DATA_DIR, exist_ok=True)
 
-    if checkpoint_path:
-        if finetuning_type in PEFT_METHODS:  # list
-            args["adapter_name_or_path"] = ",".join(
-                [get_save_dir(model_name, finetuning_type, adapter) for adapter in checkpoint_path]
-            )
-        else:  # str
-            args["model_name_or_path"] = get_save_dir(model_name, finetuning_type, checkpoint_path)
+    config_path = os.path.join(DEFAULT_CONFIG_DIR, f"{get_time()}.yaml")
+    config = dict(
+        model_name=model_name,
+        model_path=model_path,
+        finetuning_type=finetuning_type,
+        dataset=dataset,
+    )
+    save_args(config_path, config)
+
+    dataset_info = load_dataset_info(dataset_dir)
+    for name in dataset:
+        file_name = dataset_info.get(name, {}).get("file_name")
+        if not file_name:
+            continue
+        src_path = os.path.join(dataset_dir, file_name)
+        dst_path = os.path.join(DEFAULT_DATA_DIR, os.path.basename(file_name))
+        if os.path.isdir(src_path):
+            shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
+        elif os.path.isfile(src_path):
+            shutil.copy2(src_path, dst_path)
 
     yield ALERTS["info_exporting"][lang]
-    export_model(args)
-    torch_gc()
     yield ALERTS["info_exported"][lang]
 
 
 def create_export_tab(engine: "Engine") -> dict[str, "Component"]:
     with gr.Row():
-        export_size = gr.Slider(minimum=1, maximum=100, value=5, step=1)
-        export_quantization_bit = gr.Dropdown(choices=["none"] + GPTQ_BITS, value="none")
-        export_quantization_dataset = gr.Textbox(value="data/c4_demo.jsonl")
-        export_device = gr.Radio(choices=["cpu", "auto"], value="cpu")
-        export_legacy_format = gr.Checkbox()
+        dataset_dir = gr.Textbox(value=DEFAULT_DATA_DIR, scale=1)
+        dataset = gr.Dropdown(multiselect=True, allow_custom_value=True, scale=4)
+        preview_elems = create_preview_box(dataset_dir, dataset)
 
-    with gr.Row():
-        export_dir = gr.Textbox()
-        export_hub_model_id = gr.Textbox()
-        extra_args = gr.Textbox(value="{}")
-
-    checkpoint_path: gr.Dropdown = engine.manager.get_elem_by_id("top.checkpoint_path")
-    checkpoint_path.change(can_quantize, [checkpoint_path], [export_quantization_bit], queue=False)
+    dataset_dir.change(list_datasets, [dataset_dir], [dataset], queue=False)
+    dataset.focus(list_datasets, [dataset_dir], [dataset], queue=False)
 
     export_btn = gr.Button()
     info_box = gr.Textbox(show_label=False, interactive=False)
 
     export_btn.click(
-        save_model,
+        export_config_and_dataset,
         [
             engine.manager.get_elem_by_id("top.lang"),
             engine.manager.get_elem_by_id("top.model_name"),
             engine.manager.get_elem_by_id("top.model_path"),
             engine.manager.get_elem_by_id("top.finetuning_type"),
-            engine.manager.get_elem_by_id("top.checkpoint_path"),
-            engine.manager.get_elem_by_id("top.template"),
-            export_size,
-            export_quantization_bit,
-            export_quantization_dataset,
-            export_device,
-            export_legacy_format,
-            export_dir,
-            export_hub_model_id,
-            extra_args,
+            dataset_dir,
+            dataset,
         ],
         [info_box],
     )
 
     return dict(
-        export_size=export_size,
-        export_quantization_bit=export_quantization_bit,
-        export_quantization_dataset=export_quantization_dataset,
-        export_device=export_device,
-        export_legacy_format=export_legacy_format,
-        export_dir=export_dir,
-        export_hub_model_id=export_hub_model_id,
-        extra_args=extra_args,
+        dataset_dir=dataset_dir,
+        dataset=dataset,
         export_btn=export_btn,
         info_box=info_box,
+        **preview_elems,
     )
