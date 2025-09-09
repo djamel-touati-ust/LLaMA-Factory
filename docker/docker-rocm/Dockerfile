@@ -25,6 +25,11 @@ SHELL ["/bin/bash", "-c"]
 # Set the working directory
 WORKDIR /app
 
+# Default export paths for configs and datasets
+ENV LLAMAFAC_CONFIG_DIR=/work/configs \
+    LLAMAFAC_DATA_DIR=/work/datasets
+RUN mkdir -p "$LLAMAFAC_CONFIG_DIR" "$LLAMAFAC_DATA_DIR"
+
 # Change pip source
 RUN pip config set global.index-url "${PIP_INDEX}" && \
     pip config set global.extra-index-url "${PIP_INDEX}" && \
