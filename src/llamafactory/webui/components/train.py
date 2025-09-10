@@ -364,23 +364,23 @@ def create_train_tab(engine: "Engine") -> dict[str, "Component"]:
     )
 
     with gr.Row():
-        cmd_preview_btn = gr.Button()
+        cmd_preview_btn = gr.Button(visible=False)
         arg_save_btn = gr.Button()
-        arg_load_btn = gr.Button()
-        start_btn = gr.Button(variant="primary")
-        stop_btn = gr.Button(variant="stop")
+        arg_load_btn = gr.Button(visible=False)
+        start_btn = gr.Button(variant="primary", visible=False)
+        stop_btn = gr.Button(variant="stop", visible=False)
 
     with gr.Row():
         with gr.Column(scale=3):
             with gr.Row():
                 current_time = gr.Textbox(visible=False, interactive=False)
-                output_dir = gr.Dropdown(allow_custom_value=True)
+                output_dir = gr.Dropdown(allow_custom_value=True, visible=False)
                 config_path = gr.Dropdown(allow_custom_value=True)
 
             with gr.Row():
-                device_count = gr.Textbox(value=str(get_device_count() or 1), interactive=False)
-                ds_stage = gr.Dropdown(choices=["none", "2", "3"], value="none")
-                ds_offload = gr.Checkbox()
+                device_count = gr.Textbox(value=str(get_device_count() or 1), interactive=False, visible=False)
+                ds_stage = gr.Dropdown(choices=["none", "2", "3"], value="none", visible=False)
+                ds_offload = gr.Checkbox(visible=False)
 
             with gr.Row():
                 resume_btn = gr.Checkbox(visible=False, interactive=False)
@@ -390,7 +390,7 @@ def create_train_tab(engine: "Engine") -> dict[str, "Component"]:
                 output_box = gr.Markdown()
 
         with gr.Column(scale=1):
-            loss_viewer = gr.Plot()
+            loss_viewer = gr.Plot(visible=False)
 
     input_elems.update({output_dir, config_path, ds_stage, ds_offload})
     elem_dict.update(
@@ -412,36 +412,17 @@ def create_train_tab(engine: "Engine") -> dict[str, "Component"]:
             loss_viewer=loss_viewer,
         )
     )
-    output_elems = [output_box, progress_bar, loss_viewer, swanlab_link]
 
-    cmd_preview_btn.click(engine.runner.preview_train, input_elems, output_elems, concurrency_limit=None)
-    start_btn.click(engine.runner.run_train, input_elems, output_elems)
-    stop_btn.click(engine.runner.set_abort)
-    resume_btn.change(engine.runner.monitor, outputs=output_elems, concurrency_limit=None)
+    # Hidden buttons above are not connected to any actions
 
     lang = engine.manager.get_elem_by_id("top.lang")
     model_name: gr.Dropdown = engine.manager.get_elem_by_id("top.model_name")
     finetuning_type: gr.Dropdown = engine.manager.get_elem_by_id("top.finetuning_type")
 
-    arg_save_btn.click(engine.runner.save_args, input_elems, output_elems, concurrency_limit=None)
-    arg_load_btn.click(
-        engine.runner.load_args, [lang, config_path], list(input_elems) + [output_box], concurrency_limit=None
-    )
+    arg_save_btn.click(engine.runner.save_args, input_elems, [output_box], concurrency_limit=None)
 
     dataset.focus(list_datasets, [dataset_dir, training_stage], [dataset], queue=False)
     training_stage.change(change_stage, [training_stage], [dataset, packing], queue=False)
-    reward_model.focus(list_checkpoints, [model_name, finetuning_type], [reward_model], queue=False)
-    model_name.change(list_output_dirs, [model_name, finetuning_type, current_time], [output_dir], queue=False)
-    finetuning_type.change(list_output_dirs, [model_name, finetuning_type, current_time], [output_dir], queue=False)
-    output_dir.change(
-        list_output_dirs, [model_name, finetuning_type, current_time], [output_dir], concurrency_limit=None
-    )
-    output_dir.input(
-        engine.runner.check_output_dir,
-        [lang, model_name, finetuning_type, output_dir],
-        list(input_elems) + [output_box],
-        concurrency_limit=None,
-    )
     config_path.change(list_config_paths, [current_time], [config_path], queue=False)
 
     return elem_dict

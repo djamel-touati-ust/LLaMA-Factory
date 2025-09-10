@@ -29,6 +29,7 @@ from .common import (
     DEFAULT_CONFIG_DIR,
     abort_process,
     calculate_pixels,
+    export_datasets,
     gen_cmd,
     get_save_dir,
     load_args,
@@ -39,6 +40,9 @@ from .common import (
 )
 from .control import get_trainer_info
 from .locales import ALERTS, LOCALES
+
+EXPORT_CONFIG_DIR = os.getenv("EXPORT_CONFIG_DIR", "/work/configs")
+EXPORT_DATA_DIR = os.getenv("EXPORT_DATA_DIR", "/work/data")
 
 
 if is_gradio_available():
@@ -469,10 +473,16 @@ class Runner:
 
         lang = data[self.manager.get_elem_by_id("top.lang")]
         config_path = data[self.manager.get_elem_by_id("train.config_path")]
-        os.makedirs(DEFAULT_CONFIG_DIR, exist_ok=True)
-        save_path = os.path.join(DEFAULT_CONFIG_DIR, config_path)
+        os.makedirs(EXPORT_CONFIG_DIR, exist_ok=True)
+        save_path = os.path.join(EXPORT_CONFIG_DIR, config_path)
 
         save_args(save_path, self._build_config_dict(data))
+
+        dataset_dir = data[self.manager.get_elem_by_id("train.dataset_dir")]
+        datasets = data[self.manager.get_elem_by_id("train.dataset")]
+        if dataset_dir and datasets:
+            export_datasets(dataset_dir, datasets, EXPORT_DATA_DIR)
+
         return {output_box: ALERTS["info_config_saved"][lang] + save_path}
 
     def load_args(self, lang: str, config_path: str):
