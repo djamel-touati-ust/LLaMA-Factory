@@ -41,12 +41,17 @@ def main():
     from .chat.chat_model import run_chat
     from .eval.evaluator import run_eval
     from .extras import logging
-    from .extras.env import VERSION, print_env
+    from .version import VERSION
     from .extras.misc import find_available_port, get_device_count, is_env_enabled, use_ray
     from .train.tuner import export_model, run_exp
     from .webui.interface import run_web_demo, run_web_ui
 
     logger = logging.get_logger(__name__)
+
+    def _print_env() -> None:
+        from .extras.env import print_env
+
+        print_env()
 
     WELCOME = (
         "-" * 58
@@ -63,7 +68,7 @@ def main():
     COMMAND_MAP = {
         "api": run_api,
         "chat": run_chat,
-        "env": print_env,
+        "env": _print_env,
         "eval": run_eval,
         "export": export_model,
         "train": run_exp,
