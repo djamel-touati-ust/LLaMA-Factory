@@ -14,10 +14,7 @@
 
 from typing import TYPE_CHECKING
 
-from transformers.trainer_utils import SchedulerType
-
 from ...extras.constants import TRAINING_STAGES
-from ...extras.misc import get_device_count
 from ...extras.packages import is_gradio_available
 from ..common import DEFAULT_DATA_DIR
 from ..control import change_stage, list_checkpoints, list_config_paths, list_datasets, list_output_dirs
@@ -71,7 +68,10 @@ def create_train_tab(engine: "Engine") -> dict[str, "Component"]:
         batch_size = gr.Slider(minimum=1, maximum=1024, value=2, step=1)
         gradient_accumulation_steps = gr.Slider(minimum=1, maximum=1024, value=8, step=1)
         val_size = gr.Slider(minimum=0, maximum=1, value=0, step=0.001)
-        lr_scheduler_type = gr.Dropdown(choices=[scheduler.value for scheduler in SchedulerType], value="cosine")
+        lr_scheduler_type = gr.Dropdown(
+            choices=["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"],
+            value="cosine",
+        )
 
     input_elems.update({cutoff_len, batch_size, gradient_accumulation_steps, val_size, lr_scheduler_type})
     elem_dict.update(
@@ -378,7 +378,7 @@ def create_train_tab(engine: "Engine") -> dict[str, "Component"]:
                 config_path = gr.Dropdown(allow_custom_value=True)
 
             with gr.Row():
-                device_count = gr.Textbox(value=str(get_device_count() or 1), interactive=False, visible=False)
+                device_count = gr.Textbox(value="1", interactive=False, visible=False)
                 ds_stage = gr.Dropdown(choices=["none", "2", "3"], value="none", visible=False)
                 ds_offload = gr.Checkbox(visible=False)
 

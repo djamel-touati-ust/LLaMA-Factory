@@ -17,9 +17,13 @@ from collections import OrderedDict, defaultdict
 from enum import Enum, unique
 from typing import Optional
 
-from peft.utils import SAFETENSORS_WEIGHTS_NAME as SAFE_ADAPTER_WEIGHTS_NAME
-from peft.utils import WEIGHTS_NAME as ADAPTER_WEIGHTS_NAME
-from transformers.utils import SAFE_WEIGHTS_INDEX_NAME, SAFE_WEIGHTS_NAME, WEIGHTS_INDEX_NAME, WEIGHTS_NAME
+# define weight file names without importing heavy libs
+SAFE_ADAPTER_WEIGHTS_NAME = "adapter_model.safetensors"
+ADAPTER_WEIGHTS_NAME = "adapter_model.bin"
+SAFE_WEIGHTS_INDEX_NAME = "model.safetensors.index.json"
+SAFE_WEIGHTS_NAME = "model.safetensors"
+WEIGHTS_INDEX_NAME = "pytorch_model.bin.index.json"
+WEIGHTS_NAME = "pytorch_model.bin"
 
 
 AUDIO_PLACEHOLDER = os.getenv("AUDIO_PLACEHOLDER", "<audio>")

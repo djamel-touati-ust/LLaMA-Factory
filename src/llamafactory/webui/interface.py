@@ -15,15 +15,13 @@
 import os
 import platform
 
-from ..extras.misc import fix_proxy, is_env_enabled
+from ..extras.flags import fix_proxy, is_env_enabled
 from ..extras.packages import is_gradio_available
 from .common import save_config
-from .components import (
-    create_chat_box,
-    create_footer,
-    create_top,
-    create_train_tab,
-)
+
+from .components.footer import create_footer
+from .components.top import create_top
+from .components.train import create_train_tab
 from .css import CSS
 from .engine import Engine
 
@@ -33,7 +31,7 @@ if is_gradio_available():
 
 
 def create_ui(demo_mode: bool = False) -> "gr.Blocks":
-    engine = Engine(demo_mode=demo_mode, pure_chat=False)
+    engine = Engine(demo_mode=demo_mode)
     hostname = os.getenv("HOSTNAME", os.getenv("COMPUTERNAME", platform.node())).split(".")[0]
 
     with gr.Blocks(title=f"LLaMA Factory ({hostname})", css=CSS) as demo:
@@ -56,25 +54,6 @@ def create_ui(demo_mode: bool = False) -> "gr.Blocks":
 
     return demo
 
-
-def create_web_demo() -> "gr.Blocks":
-    engine = Engine(pure_chat=True)
-    hostname = os.getenv("HOSTNAME", os.getenv("COMPUTERNAME", platform.node())).split(".")[0]
-
-    with gr.Blocks(title=f"LLaMA Factory Web Demo ({hostname})", css=CSS) as demo:
-        lang = gr.Dropdown(choices=["en", "ru", "zh", "ko", "ja"], scale=1)
-        engine.manager.add_elems("top", dict(lang=lang))
-
-        _, _, chat_elems = create_chat_box(engine, visible=True)
-        engine.manager.add_elems("infer", chat_elems)
-
-        demo.load(engine.resume, outputs=engine.manager.get_elem_list(), concurrency_limit=None)
-        lang.change(engine.change_lang, [lang], engine.manager.get_elem_list(), queue=False)
-        lang.input(save_config, inputs=[lang], queue=False)
-
-    return demo
-
-
 def run_web_ui() -> None:
     gradio_ipv6 = is_env_enabled("GRADIO_IPV6")
     gradio_share = is_env_enabled("GRADIO_SHARE")
@@ -82,12 +61,3 @@ def run_web_ui() -> None:
     print("Visit http://ip:port for Web UI, e.g., http://127.0.0.1:7860")
     fix_proxy(ipv6_enabled=gradio_ipv6)
     create_ui().queue().launch(share=gradio_share, server_name=server_name, inbrowser=True)
-
-
-def run_web_demo() -> None:
-    gradio_ipv6 = is_env_enabled("GRADIO_IPV6")
-    gradio_share = is_env_enabled("GRADIO_SHARE")
-    server_name = os.getenv("GRADIO_SERVER_NAME", "[::]" if gradio_ipv6 else "0.0.0.0")
-    print("Visit http://ip:port for Web UI, e.g., http://127.0.0.1:7860")
-    fix_proxy(ipv6_enabled=gradio_ipv6)
-    create_web_demo().queue().launch(share=gradio_share, server_name=server_name, inbrowser=True)

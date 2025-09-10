@@ -14,13 +14,11 @@
 
 import json
 import os
-import signal
 import shutil
 from collections import defaultdict
 from datetime import datetime
 from typing import Any, Optional, Union
 
-from psutil import Process
 from yaml import safe_dump, safe_load
 
 from ..extras import logging
@@ -32,7 +30,7 @@ from ..extras.constants import (
     TRAINING_ARGS,
     DownloadSource,
 )
-from ..extras.misc import use_modelscope, use_openmind
+from ..extras.flags import use_modelscope, use_openmind
 
 
 logger = logging.get_logger(__name__)
@@ -42,19 +40,6 @@ DEFAULT_CONFIG_DIR = "config"
 DEFAULT_DATA_DIR = "data"
 DEFAULT_SAVE_DIR = "saves"
 USER_CONFIG = "user_config.yaml"
-
-
-def abort_process(pid: int) -> None:
-    r"""Abort the processes recursively in a bottom-up way."""
-    try:
-        children = Process(pid).children()
-        if children:
-            for child in children:
-                abort_process(child.pid)
-
-        os.kill(pid, signal.SIGABRT)
-    except Exception:
-        pass
 
 
 def get_save_dir(*paths: str) -> os.PathLike:
