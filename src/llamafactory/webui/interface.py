@@ -20,10 +20,7 @@ from ..extras.packages import is_gradio_available
 from .common import save_config
 from .components import (
     create_chat_box,
-    create_eval_tab,
-    create_export_tab,
     create_footer,
-    create_infer_tab,
     create_top,
     create_train_tab,
 )
@@ -49,18 +46,8 @@ def create_ui(demo_mode: bool = False) -> "gr.Blocks":
         engine.manager.add_elems("top", create_top())
         lang: gr.Dropdown = engine.manager.get_elem_by_id("top.lang")
 
-        with gr.Tab("Train"):
+        with gr.Tab("Export"):
             engine.manager.add_elems("train", create_train_tab(engine))
-
-        with gr.Tab("Evaluate & Predict"):
-            engine.manager.add_elems("eval", create_eval_tab(engine))
-
-        with gr.Tab("Chat"):
-            engine.manager.add_elems("infer", create_infer_tab(engine))
-
-        if not demo_mode:
-            with gr.Tab("Export"):
-                engine.manager.add_elems("export", create_export_tab(engine))
 
         engine.manager.add_elems("footer", create_footer())
         demo.load(engine.resume, outputs=engine.manager.get_elem_list(), concurrency_limit=None)

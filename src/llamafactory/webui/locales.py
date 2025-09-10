@@ -2199,19 +2199,19 @@ LOCALES = {
     },
     "arg_save_btn": {
         "en": {
-            "value": "Save arguments",
+            "value": "Export",
         },
         "ru": {
-            "value": "Сохранить аргументы",
+            "value": "Export",
         },
         "zh": {
-            "value": "保存训练参数",
+            "value": "导出",
         },
         "ko": {
-            "value": "Argument 저장",
+            "value": "Export",
         },
         "ja": {
-            "value": "引数を保存",
+            "value": "エクスポート",
         },
     },
     "arg_load_btn": {
