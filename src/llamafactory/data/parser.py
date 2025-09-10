@@ -20,7 +20,7 @@ from typing import Any, Literal, Optional, Union
 from huggingface_hub import hf_hub_download
 
 from ..extras.constants import DATA_CONFIG
-from ..extras.misc import use_modelscope, use_openmind
+from ..extras.flags import use_modelscope, use_openmind
 
 
 @dataclass

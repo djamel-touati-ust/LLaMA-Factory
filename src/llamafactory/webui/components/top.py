@@ -14,12 +14,18 @@
 
 from typing import TYPE_CHECKING
 
-from ...data import TEMPLATES
 from ...extras.constants import METHODS, SUPPORTED_MODELS
-from ...extras.misc import use_modelscope, use_openmind
+from ...extras.flags import use_modelscope, use_openmind
 from ...extras.packages import is_gradio_available
 from ..common import save_config
-from ..control import can_quantize, can_quantize_to, check_template, get_model_info, list_checkpoints, switch_hub
+from ..control import (
+    can_quantize,
+    can_quantize_to,
+    check_template,
+    get_model_info,
+    list_checkpoints,
+    switch_hub,
+)
 
 
 if is_gradio_available():
@@ -46,7 +52,7 @@ def create_top() -> dict[str, "Component"]:
     with gr.Row():
         quantization_bit = gr.Dropdown(choices=["none", "8", "4"], value="none", allow_custom_value=True)
         quantization_method = gr.Dropdown(choices=["bnb", "hqq", "eetq"], value="bnb")
-        template = gr.Dropdown(choices=list(TEMPLATES.keys()), value="default")
+        template = gr.Dropdown(choices=["default"], value="default")
         rope_scaling = gr.Dropdown(choices=["none", "linear", "dynamic", "yarn", "llama3"], value="none")
         booster = gr.Dropdown(choices=["auto", "flashattn2", "unsloth", "liger_kernel"], value="auto")
 
