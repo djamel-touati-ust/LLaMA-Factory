@@ -1,0 +1,20 @@
+FROM python:3.10-slim
+
+# Optional: install git if needed for huggingface or version control
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY requirements-export.txt ./
+RUN pip install --no-cache-dir -r requirements-export.txt
+
+# Copy only UI code and assets
+COPY src ./src
+COPY assets ./assets
+COPY data ./data
+
+ENV PYTHONPATH=/app/src \
+    EXPORT_CONFIG_DIR=/work/configs \
+    EXPORT_DATA_DIR=/work/data
+
+EXPOSE 7860
+CMD ["python", "-c", "from llamafactory.webui.interface import run_web_ui; run_web_ui()"]

@@ -24,8 +24,4 @@ Set logging verbosity: LLAMAFACTORY_VERBOSITY=WARN
 Use modelscope: USE_MODELSCOPE_HUB=1
 Use openmind: USE_OPENMIND_HUB=1
 """
-
-from .extras.env import VERSION
-
-
-__version__ = VERSION
+__version__ = "0.9.4.dev0"

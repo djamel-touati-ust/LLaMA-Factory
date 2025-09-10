@@ -14,7 +14,7 @@
 
 import os
 
-from llamafactory.extras.misc import fix_proxy, is_env_enabled
+from llamafactory.extras.flags import fix_proxy, is_env_enabled
 from llamafactory.webui.interface import create_ui
 
 
