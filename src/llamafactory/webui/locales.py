@@ -2199,19 +2199,21 @@ LOCALES = {
     },
     "arg_save_btn": {
         "en": {
-            "value": "Export",
+
+            "value": "Schedule Training",
         },
         "ru": {
-            "value": "Export",
+            "value": "Schedule Training",
         },
         "zh": {
-            "value": "导出",
+            "value": "Schedule Training",
         },
         "ko": {
-            "value": "Export",
+            "value": "Schedule Training",
         },
         "ja": {
-            "value": "エクスポート",
+            "value": "Schedule Training",
+
         },
     },
     "arg_load_btn": {
@@ -2905,19 +2907,19 @@ LOCALES = {
     },
     "export_btn": {
         "en": {
-            "value": "Export",
+            "value": "Schedule Training",
         },
         "ru": {
-            "value": "Экспорт",
+            "value": "Schedule Training",
         },
         "zh": {
-            "value": "开始导出",
+            "value": "Schedule Training",
         },
         "ko": {
-            "value": "내보내기",
+            "value": "Schedule Training",
         },
         "ja": {
-            "value": "エクスポート",
+            "value": "Schedule Training",
         },
     },
     "device_memory": {

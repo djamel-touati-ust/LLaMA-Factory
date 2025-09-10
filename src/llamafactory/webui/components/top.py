@@ -14,7 +14,9 @@
 
 from typing import TYPE_CHECKING
 
-from ...extras.constants import METHODS, SUPPORTED_MODELS
+
+from ...extras.constants import DEFAULT_TEMPLATE, METHODS, SUPPORTED_MODELS
+
 from ...extras.flags import use_modelscope, use_openmind
 from ...extras.packages import is_gradio_available
 from ..common import save_config
@@ -52,7 +54,10 @@ def create_top() -> dict[str, "Component"]:
     with gr.Row():
         quantization_bit = gr.Dropdown(choices=["none", "8", "4"], value="none", allow_custom_value=True)
         quantization_method = gr.Dropdown(choices=["bnb", "hqq", "eetq"], value="bnb")
-        template = gr.Dropdown(choices=["default"], value="default")
+
+        templates = sorted({t for t in DEFAULT_TEMPLATE.values() if t})
+        template = gr.Dropdown(choices=["default"] + templates, value="default", allow_custom_value=True)
+
         rope_scaling = gr.Dropdown(choices=["none", "linear", "dynamic", "yarn", "llama3"], value="none")
         booster = gr.Dropdown(choices=["auto", "flashattn2", "unsloth", "liger_kernel"], value="auto")
 
