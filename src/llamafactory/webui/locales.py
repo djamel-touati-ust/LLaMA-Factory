@@ -2199,6 +2199,7 @@ LOCALES = {
     },
     "arg_save_btn": {
         "en": {
+
             "value": "Schedule Training",
         },
         "ru": {
@@ -2212,6 +2213,7 @@ LOCALES = {
         },
         "ja": {
             "value": "Schedule Training",
+
         },
     },
     "arg_load_btn": {
