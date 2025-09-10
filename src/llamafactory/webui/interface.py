@@ -18,6 +18,7 @@ import platform
 from ..extras.flags import fix_proxy, is_env_enabled
 from ..extras.packages import is_gradio_available
 from .common import save_config
+
 from .components.footer import create_footer
 from .components.top import create_top
 from .components.train import create_train_tab
